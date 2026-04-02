@@ -1,3 +1,4 @@
+#Should the webcam feed be displayed on the web interface?
 use_local_streaming = True
 
 
@@ -28,6 +29,8 @@ class StreamingOutput(io.BufferedIOBase):
         with self.condition:
             self.frame = buf
             self.condition.notify_all()
+
+picam2 = None
 if use_local_streaming:
     picam2 = Picamera2()
     picam2.configure(picam2.create_video_configuration(main={"size": (640, 480)}))
@@ -163,3 +166,5 @@ def get_serial():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+    if use_local_streaming and picam2 is not None:
+        picam2.stop()
