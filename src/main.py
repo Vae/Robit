@@ -61,16 +61,12 @@ def index():
         </head>
         <body>
             <h1>Control Panel</h1>
-
-            <form action="/cmd" method="post">
-                <button name="command" value="FORWARD">Forward</button><br><br>
-                <button name="command" value="BACKWARD">Backward</button><br><br>
-                <button name="command" value="LEFT">Turn Left</button><br><br>
-                <button name="command" value="RIGHT">Turn Right</button><br><br>
-                <button name="command" value="SPIN_LEFT">Spin Left</button><br><br>
-                <button name="command" value="SPIN_RIGHT">Spin Right</button><br><br>
-                <button name="command" value="RESET">Reset</button>
-            </form>
+            
+            <button onclick="sendCommand('FORWARD')">Forward</button><br><br>
+            <button onclick="sendCommand('BACKWARD')">Backward</button><br><br>
+            <button onclick="sendCommand('LEFT')">Turn Left</button><br><br>
+            <button onclick="sendCommand('RIGHT')">Turn Right</button><br><br>
+            <button onclick="sendCommand('RESET')">Reset</button>
     """
 
     if use_local_streaming:
@@ -113,6 +109,21 @@ def index():
                     const intervalId = setInterval(updateSerial, 1000); // poll every second
                 };
             </script>
+            <script>
+            async function sendCommand(cmd) {
+                try {
+                    await fetch('/cmd', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ command: cmd })
+                    });
+                } catch (e) {
+                    console.error("Command failed:", e);
+                }
+            }
+            </script>
         </body>
     </html>
     """
@@ -120,7 +131,8 @@ def index():
 
 @app.route("/cmd", methods=["POST"])
 def command():
-    cmd = request.form.get("command")
+    data = request.get_json()
+    cmd = data.get("command") if data else None
 
     valid_commands = {
             "FORWARD": "M3M1000",
@@ -136,12 +148,14 @@ def command():
         scmd = valid_commands[cmd]
         if isinstance(scmd, str):
             send_command(scmd)
-        if isinstance(scmd, list) or isinstance(scmd, tuple):
+        elif isinstance(scmd, list) or isinstance(scmd, tuple):
             for i in scmd:
                 send_command(i)
+        else:
+            return jsonify({"status": "error"}), 500
+        return jsonify({"status": "ok"})
 
-    return redirect(url_for("index"))
-
+    return jsonify({"status": "error"}), 400
 
 @app.route("/serial")
 def get_serial():
