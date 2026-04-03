@@ -1,7 +1,6 @@
 #Should the webcam feed be displayed on the web interface?
 use_local_streaming = True
 
-
 from flask import Flask, request, redirect, url_for, jsonify, Response
 from vae_robit import Robit
 import logging
@@ -30,7 +29,6 @@ class StreamingOutput(io.BufferedIOBase):
             self.frame = buf
             self.condition.notify_all()
 
-picam2 = None
 if use_local_streaming:
     picam2 = Picamera2()
     picam2.configure(picam2.create_video_configuration(main={"size": (640, 480)}))
@@ -67,8 +65,10 @@ def index():
             
             <button onclick="sendCommand('FORWARD')">Forward</button><br><br>
             <button onclick="sendCommand('BACKWARD')">Backward</button><br><br>
-            <button onclick="sendCommand('LEFT')">Turn Left</button><br><br>
             <button onclick="sendCommand('RIGHT')">Turn Right</button><br><br>
+            <button onclick="sendCommand('LEFT')">Turn Left</button><br><br>
+            <button onclick="sendCommand('SPIN_RIGHT')">Spin Right</button><br><br>
+            <button onclick="sendCommand('SPIN_LEFT')">Spin Left</button><br><br>
             <button onclick="sendCommand('RESET')">Reset</button>
     """
 
@@ -140,10 +140,10 @@ def command():
     valid_commands = {
             "FORWARD": "M3M1000",
             "BACKWARD": "M3M-1000",
-            "LEFT": "M1M400",
             "RIGHT": "M2M400",
-            "SPIN_LEFT": ("M1M400", "M2M-400"),
+            "LEFT": "M1M400",
             "SPIN_RIGHT": ("M2M400", "M1M-400"),
+            "SPIN_LEFT": ("M1M400", "M2M-400"),
             "RESET": "SR"
     }
 
