@@ -16,6 +16,10 @@ Core Goals, completed marked with ✅
 * ✅ Web interface for controlling robot
 * ✅ FPV
 * Docking station for charging: should be able to drive the robot remotely to a dock to recharge
+  * Allow the bot's wheels to drive onto docking station in order to prevent the bot from pushing it
+  * Should have some texture to help prevent wheel slippage
+  * ? Should the upper structure be on a bearing so that it can rotate to match bot orientation ?
+    * Would need something on the bot to catch to make it rotate--the wheel wells
 
 Stretch goals:
 * Indoor mapping and navigation (Lidar/SLAM)
