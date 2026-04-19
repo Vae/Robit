@@ -6,7 +6,7 @@ class Robit:
         self.serial = VaeSerial("/dev/ttyUSB0", 115200)
         self.start_ms = int(round(time.time() * 1000))
         self.invert = True
-        self.swap = True
+        self.swap = False
     def _getMotorValue(self, value):
         if self.invert: return -value
         return value
@@ -19,10 +19,9 @@ class Robit:
     def move(self, distance):
         self._sendCommand(f"M3M{self._getMotorValue(distance)}")
     def spin(self, distance):
-        self._sendCommand(f"M{self._getMotor(1)}M{self._getMotorValue(distance)}")
-        self._sendCommand(f"M{self._getMotor(2)}M{-self._getMotorValue(distance)}")
-        pass
+        self._sendCommand(f"M{self._getMotor(1)}M{self._getMotorValue(distance)}\nM{self._getMotor(2)}M{-self._getMotorValue(distance)}")
+        #self._sendCommand(f"M{self._getMotor(2)}M{-self._getMotorValue(distance)}")
     def reset(self):
-        pass
+        self._sendCommand("SR")
     def _sendCommand(self, command):
         self.serial.sendCommand(command)

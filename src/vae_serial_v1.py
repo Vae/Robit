@@ -11,6 +11,15 @@ class VaeSerialMotor:
         self.acceleration = 0
         self.remainingTravel = 0
         self.targetPosition = 0
+    def state(self):
+        return {
+            "index": self.index,
+            "position": self.position,
+            "maxSpeed": self.maxSpeed,
+            "acceleration": self.acceleration,
+            "remainingTravel": self.remainingTravel,
+            "targetPosition": self.targetPosition
+        }
 
 class VaeSerial:
     def __init__(self, serialPort: str, serialBaudRate: int, serialTimeout: int = 1):
@@ -28,7 +37,7 @@ class VaeSerial:
 
         # Start background reader thread
         self.readerThread = threading.Thread(target=self._serial_reader, daemon=True).start()
-        self.reportInterval = 10
+        self.reportInterval = 2
 
         self.timerThread = threading.Thread(target=self._run_periodically, daemon=True)  # Set as daemon to stop when main program exits
         self.timerThread.start()
@@ -77,7 +86,7 @@ class VaeSerial:
                         motorsAffected += 1
                     if self.motors[0].remainingTravel == 0 and self.motors[1].remainingTravel == 0:
                         self.sendCommand("M3D")
-                        print("Stop motors")
+                        # print("Stop motors")
                 case 'T':
                     self.motors[motorIndex].targetPosition = int(value)
             elementIndex += 1
@@ -102,3 +111,11 @@ class VaeSerial:
         while True:
             self.sendCommand("RP")
             time.sleep(self.reportInterval)  # Sleep for 1 second
+
+    def state(self):
+        return {
+            "motors": (
+                self.motors[0].state(),
+                self.motors[1].state(),
+            )
+        }

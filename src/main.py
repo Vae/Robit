@@ -1,3 +1,7 @@
+###
+###   You'll need to deploy all open files
+###
+
 #Should the webcam feed be displayed on the web interface?
 use_local_streaming = True
 
@@ -65,17 +69,15 @@ def index():
             
             <button onclick="sendCommand('FORWARD')">Forward</button><br><br>
             <button onclick="sendCommand('BACKWARD')">Backward</button><br><br>
-            <button onclick="sendCommand('RIGHT')">Turn Right</button><br><br>
-            <button onclick="sendCommand('LEFT')">Turn Left</button><br><br>
             <button onclick="sendCommand('SPIN_RIGHT')">Spin Right</button><br><br>
             <button onclick="sendCommand('SPIN_LEFT')">Spin Left</button><br><br>
-            <button onclick="sendCommand('RESET')">Reset</button>
+            <button onclick="sendCommand('RESET')">Stop</button>
     """
 
     if use_local_streaming:
         content += """
             <h2>Camera Feed</h2>
-            <img src="/video_feed" width="640" height="480" style="transform: rotate(180deg);" loading="eager">
+            <img src="/video_feed" width="480" height="640" style="transform: rotate(270deg);" loading="eager">
         """
 
     content += """
@@ -87,7 +89,7 @@ def index():
                     try {
                         console.info("update")
                     
-                        const response = await fetch('/serial');
+                        const response = await fetch('/robitstate');
                         const data = await response.json();
 
                         const box = document.getElementById('serialBox');
@@ -136,33 +138,32 @@ def index():
 def command():
     data = request.get_json()
     cmd = data.get("command") if data else None
+    success = jsonify({"status": "ok"})
 
-    valid_commands = {
-            "FORWARD": "M3M1000",
-            "BACKWARD": "M3M-1000",
-            "RIGHT": "M2M400",
-            "LEFT": "M1M400",
-            "SPIN_RIGHT": ("M2M400", "M1M-400"),
-            "SPIN_LEFT": ("M1M400", "M2M-400"),
-            "RESET": "SR"
-    }
-
-    if cmd in valid_commands:
-        scmd = valid_commands[cmd]
-        if isinstance(scmd, str):
-            send_command(scmd)
-        elif isinstance(scmd, list) or isinstance(scmd, tuple):
-            for i in scmd:
-                send_command(i)
-        else:
-            return jsonify({"status": "error"}), 500
-        return jsonify({"status": "ok"})
-
+    match cmd:
+        case "FORWARD":
+            robit.move(2000)
+            return success
+        case "BACKWARD":
+            robit.move(-2000)
+            return success
+        case "SPIN_RIGHT":
+            robit.spin(630)
+            return success
+        case "SPIN_LEFT":
+            robit.spin(-630)
+            return success
+        case "RESET":
+            robit.reset()
+            return success
     return jsonify({"status": "error"}), 400
 
 @app.route("/serial")
 def get_serial():
     return jsonify({"lines": list(robit.serial.history)})
+@app.route("/robitstate")
+def get_robitstate():
+    return jsonify(robit.serial.state())
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
